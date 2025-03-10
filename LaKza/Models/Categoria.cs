@@ -12,8 +12,8 @@ namespace LaKza.Models;
 
         [Required(ErrorMessage ="Por favor, informe o Nome")]
         [StringLength(30, ErrorMessage = "O nome deve possuir no máximo 30 caracteres")]
-        public int Nome { get; set; }
+        public string Nome { get; set; }
 
         [StringLength(300)]
-        public int Foto { get; set; }
+        public string Foto { get; set; }
     }
