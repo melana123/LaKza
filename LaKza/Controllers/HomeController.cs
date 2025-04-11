@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using LaKza.Models;
 using LaKza.Data;
 using Microsoft.EntityFrameworkCore;
+using LaKza.ViewModels;
 
 namespace LaKza.Controllers;
 
@@ -19,11 +20,34 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        List<Produto> produtos =_db.Produtos
-        .Where(p =>p.Destaque)
-        .Include(p => p.Fotos)
-        .ToList();
-        return View();
+        List<Produto> produtos = _db.Produtos
+            .Where(p => p.Destaque)
+            .Include(p => p.Fotos)
+            .ToList();
+        return View(produtos);
+    }
+
+    public IActionResult Produto(int id)
+    {
+        Produto produto = _db.Produtos
+            .Where(p => p.Id == id)
+            .Include(p => p.Categoria)
+            .Include(p => p.Fotos)
+            .SingleOrDefault();
+        
+        List<Produto> semelhantes = _db.Produtos
+            .Where(p => p.Id != id && p.CategoriaId == produto.CategoriaId)
+            .Include(p => p.Categoria)
+            .Include(p => p.Fotos)
+            .Take(4)
+            .ToList();
+        
+        ProdutoVM produtoVM = new() {
+            Produto = produto,
+            Semelhantes = semelhantes
+        };
+        
+        return View(produtoVM);
     }
 
     public IActionResult Privacy()
