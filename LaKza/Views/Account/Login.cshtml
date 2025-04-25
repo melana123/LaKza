@@ -1,12 +1,12 @@
 @model LaKza.ViewModels.LoginVM
 @{
     ViewData["Title"] = "Login";
-    Layout = "~/Views/Shared/_LayoutAccont.cshtml";
+    Layout = "~/Views/Shared/_LayoutAccount.cshtml";
 }
 
 <div class="container">
     <div class="row justify-content-center">
-        <h1 class="display-5 text-center">GStore</h1>
+        <h1 class="display-5 text-center">LaKza</h1>
         <div class="col-lg-5">
             <div class="card shadow-lg border-0 rounded-1g">
                 <div class="card-header">
@@ -23,7 +23,7 @@
                 </div>
                 <div class="form-floating mb-3">
                     <input class="form-control asp-for= "Senha" />
-                    <label asp-for-"Senha"></label>
+                    <label asp-for="Senha"></label>
                     <span asp-validation-for="Senha" class="text-danger text-sm"></span>
                 </div>
                 <div class="form-check mb-3">
@@ -47,7 +47,7 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial.cshtml"></partial>
     <script type="text/javascript">
-    let mensagemErro =mensagemErro '';
+    let mensagemErro = '';
     $(".asp-validation-summary-errors UrlRetorno li").each(function(){
         mensagemErro += $(this).text() + '<br />';
     });
