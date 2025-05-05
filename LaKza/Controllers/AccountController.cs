@@ -26,6 +26,7 @@ public class AccountController : Controller
         _host = host;
 
     }
+    
     [HttpGet]
     public IActionResult Login(string returnUrl)
     {
@@ -35,19 +36,7 @@ public class AccountController : Controller
         };
         return View(login);
     }
-   
-    public bool IsValidEmail(string email)
-    {
-        try
-        {
-            MailAddress m = new(email);
-            return true;
-        }
-        catch (FormatException)
-        {
-            return false;
-        }
-    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginVM login)
@@ -87,7 +76,7 @@ public class AccountController : Controller
 
     }
 
-[HttpPost]
+    [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
@@ -95,7 +84,17 @@ public class AccountController : Controller
         await _singInManager.SignOutAsync();
         return RedirectToAction("Index", "Home");
     }
+
+    public bool IsValidEmail(string email)
+    {
+        try
+        {
+            MailAddress m = new(email);
+            return true;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
 }
-
-
-

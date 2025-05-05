@@ -5,6 +5,7 @@ dotnet new sln --name LaKza
 dotnet new mvc -o LaKza
 dotnet sln add LaKza\LaKza.csproj
 
+ligar o xampp
 cd LaKza
 
 dotnet add package Microsoft.EntityFrameworkCore --version 9.0.1
