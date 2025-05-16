@@ -1,5 +1,7 @@
 using System.Net.Mail;
 using System.Security.Claims;
+using LaKza.Data;
+using LaKza.Helpers;
 using LaKza.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,18 +14,21 @@ public class AccountController : Controller
     private readonly SignInManager<Usuario> _singInManager;
     private readonly UserManager<Usuario> _userManager;
     private readonly IWebHostEnvironment _host;
+    private readonly AppDbContext _db;
 
     public AccountController(
         ILogger<AccountController> logger,
         SignInManager<Usuario> singInManager,
         UserManager<Usuario> userManager,
-        IWebHostEnvironment host
+        IWebHostEnvironment host,
+        AppDbContext db
     )
     {
         _logger = logger;
         _singInManager = singInManager;
         _userManager = userManager;
         _host = host;
+        _db = db;
 
     }
     
