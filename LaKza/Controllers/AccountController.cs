@@ -1,37 +1,37 @@
+using LaKza.Models;
+using LaKza.ViewModels;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using System.Net.Mail;
 using System.Security.Claims;
 using LaKza.Data;
 using LaKza.Helpers;
-using LaKza.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using LaKza.ViewModels;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+
 
 namespace LaKza.Controllers;
 public class AccountController : Controller
 {
     private readonly ILogger<AccountController> _logger;
-    private readonly SignInManager<Usuario> _singInManager;
+    private readonly SignInManager<Usuario> _signInManager;
     private readonly UserManager<Usuario> _userManager;
     private readonly IWebHostEnvironment _host;
     private readonly AppDbContext _db;
-
     public AccountController(
         ILogger<AccountController> logger,
-        SignInManager<Usuario> singInManager,
+        SignInManager<Usuario> signInManager,
         UserManager<Usuario> userManager,
         IWebHostEnvironment host,
         AppDbContext db
     )
     {
         _logger = logger;
-        _singInManager = singInManager;
+        _signInManager = signInManager;
         _userManager = userManager;
         _host = host;
         _db = db;
-
     }
-    
+
     [HttpGet]
     public IActionResult Login(string returnUrl)
     {
@@ -41,7 +41,6 @@ public class AccountController : Controller
         };
         return View(login);
     }
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginVM login)
@@ -55,38 +54,38 @@ public class AccountController : Controller
                 if (user != null)
                     userName = user.UserName;
             }
-            var result = await _singInManager.PasswordSignInAsync(
+            var result = await _signInManager.PasswordSignInAsync(
                 userName, login.Senha, login.Lembrar, lockoutOnFailure: true
             );
+
             if (result.Succeeded)
             {
-                _logger.LogInformation($"Usuário{login.Email} acessou o sistema");
+                _logger.LogInformation($"Usuário {login.Email} acessou o sistema");
                 return LocalRedirect(login.UrlRetorno);
             }
+
             if (result.IsLockedOut)
             {
-                _logger.LogWarning($"Usuário{login.Email} está bloqueado");
-                ModelState.AddModelError("", "Sua conta está bloqueada, aguarde alguns minutos e tente novamente");
+                _logger.LogWarning($"Usuário {login.Email} está bloqueado");
+                ModelState.AddModelError("", "Sua conta está bloqueada, aguarde alguns minutos e tente novamente!!");
             }
             else
             if (result.IsNotAllowed)
             {
-                _logger.LogWarning($"Usuário {login.Email} não confirmou sua conta");
-                ModelState.AddModelError(string.Empty, "Usuário e/ou Senha Inválidos");
+                _logger.LogWarning($"Usuario {login.Email}  não confirmou sua conta");
+                ModelState.AddModelError(string.Empty, "Sua conta não está confirmada, verifique seu email!!");
             }
             else
-                ModelState.AddModelError(string.Empty, "Usuário ou senha Inválidos");
+                ModelState.AddModelError(string.Empty, "Usuário e/ou Senha Inválidos!!!");
         }
         return View(login);
-
     }
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
-        _logger.LogInformation($"Usuário{ClaimTypes.Email} fez logoff");
-        await _singInManager.SignOutAsync();
+        _logger.LogInformation($"Usuário {ClaimTypes.Email} fez logoff");
+        await _signInManager.SignOutAsync();
         return RedirectToAction("Index", "Home");
     }
 
@@ -95,6 +94,54 @@ public class AccountController : Controller
     {
         RegistroVM register = new();
         return View(register);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Registro(RegistroVM registro)
+    {
+        if (ModelState.IsValid)
+        {
+            var usuario = Activator.CreateInstance<Usuario>();
+            usuario.Nome = registro.Nome;
+            usuario.DataNascimento = registro.DataNascimento;
+            usuario.UserName = registro.Email;
+            usuario.NormalizedUserName = registro.Email.ToUpper();
+            usuario.Email = registro.Email;
+            usuario.NormalizedEmail = registro.Email.ToUpper();
+            usuario.EmailConfirmed = true;
+            var result = await _userManager.CreateAsync(usuario, registro.Senha);
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation($"Novo usuário registro com o email{registro.Email}.");
+
+                await _userManager.AddToRoleAsync(usuario, "Cliente");
+
+                if (registro.Foto != null)
+                {
+                    string nomeArquivo = usuario.Id + Path.GetExtension(registro.Foto.FileName);
+                    string caminho = Path.Combine(_host.WebRootPath, @"img\usuarios");
+                    string novoArquivo = Path.Combine(caminho, nomeArquivo);
+                    using (var stream = new FileStream(novoArquivo, FileMode.Create))
+                    {
+                        registro.Foto.CopyTo(stream);
+                    }
+                    usuario.Foto = @"\img\usuarios" + nomeArquivo;
+                    await _db.SaveChangesAsync();
+                }
+                TempData["Success"] = "Conta Criada com Sucesso!";
+                return RedirectToAction(nameof(Login));
+            }
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(string.Empty, TranslateIndentityErrors.TranslateErrorMessage(error.Code));
+        }
+        return View(registro);
+    }
+
+    public IActionResult AccessDenied()
+    {
+        return View();
     }
 
     public bool IsValidEmail(string email)
